@@ -41,6 +41,20 @@ function statusBadge(status?: string) {
   return { text: s || "?", bg: "#f5f5f5", border: "#e0e0e0" };
 }
 
+function pickBadgeStyle(p: any) {
+  if (!p) return null;
+
+  if (p.severity === "huge") {
+    return { bg: "#ffe0f0", border: "#ff7ac3", text: "#7a114a" }; // pink
+  }
+
+  if (p.value) {
+    return { bg: "#e6f7e6", border: "#9ad29a", text: "#145214" }; // green
+  }
+
+  return { bg: "#f2f2f2", border: "#d6d6d6", text: "#333" }; // gray
+}
+
 const quickBtnStyle: React.CSSProperties = {
   padding: "8px 10px",
   borderRadius: 8,
@@ -119,7 +133,7 @@ export default function Page() {
         minEdge: String(minEdge),
 
         // optional: show only value bets in scan-top
-        onlyValue: "true",
+        onlyValue: "false",
         // optional: tweak if you want
         // minOdds: "1.7",
         market: "all",
@@ -218,8 +232,10 @@ export default function Page() {
     const pred = scanMap[fixtureId];
     const best = pred?.top?.[0];
     if (!best) return null;
-
-    // small compact chip
+  
+    const s = pickBadgeStyle(best);
+    if (!s) return null;
+  
     return (
       <span
         style={{
@@ -228,16 +244,18 @@ export default function Page() {
           fontWeight: 900,
           padding: "2px 8px",
           borderRadius: 999,
-          border: "1px solid #ddd",
-          background: best.value ? "#e8f5e9" : "#f5f5f5",
+          border: `1px solid ${s.border}`,
+          background: s.bg,
+          color: s.text,
         }}
         title={`${best.market} ${best.selection} @${best.odds} edge ${best.edge}`}
       >
         {String(best.market).toUpperCase()} {String(best.selection).toUpperCase()} · e {best.edge}
-        {best.value ? " ✅" : ""}
+        {best.severity === "huge" ? " 🟣" : best.value ? " ✅" : ""}
       </span>
     );
   }
+  
 
   return (
     <main style={{ padding: 18, maxWidth: 1200, margin: "0 auto", fontFamily: "system-ui, -apple-system, Segoe UI, Roboto" }}>

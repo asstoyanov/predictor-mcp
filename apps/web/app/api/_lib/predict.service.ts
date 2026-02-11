@@ -201,16 +201,17 @@ if (process.env.NODE_ENV !== "production") {
 
   const resp = oddsJson?.response ?? [];
   const bkAll = resp.flatMap((x: any) => x?.bookmakers ?? []);
-const pick = pickBookmakerBet365(bkAll);
+  const pick = pickBookmakerBet365(bkAll);
 
-if (!pick) {
-  return NextResponse.json({
-    ...base,
-    oddsAvailable: false,
-    note: "Bet365 odds not available for this fixture.",
-    bookmaker: null,
-  });
-}
+  if (!pick) {
+    return {
+      ...base,
+      oddsAvailable: false,
+      note: "Bet365 odds not available for this fixture.",
+      bookmaker: null,
+      top: [], // optional but helps UI consistency
+    };
+  }
 
   if (!pick) {
     return { ...base, oddsAvailable: false, note: "No bookmakers found." };

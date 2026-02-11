@@ -6,7 +6,7 @@ import { predictFixture } from "./predict.service";
 const CACHE_TTL_MS = 60_000;
 const scanCache = createTtlCache<any>(CACHE_TTL_MS);
 
-type MarketKey = "1x2" | "btts" | "ou25" | "all";
+type MarketKey = "1x2" | "btts" | "ou25" | "draw" | "all";
 
 type ScanOpts = {
   leagueKey: LeagueKey;
@@ -70,6 +70,19 @@ function passesFilters(
   return true;
 }
 
+function severityFromBet(bet: any) {
+  const edge = Number(bet?.edge);
+  const odds = Number(bet?.odds);
+
+  // huge disagreement: big edge AND not a short price
+  if (Number.isFinite(edge) && edge >= 0.1 && Number.isFinite(odds) && odds >= 3) {
+    return "huge";
+  }
+
+  if (bet?.value) return "value";
+  return "none";
+}
+
 // Type guard: only this branch guarantees pred.top exists
 function hasOddsTop(x: any): x is { oddsAvailable: true; top: any[] } {
   return x?.oddsAvailable === true && Array.isArray(x?.top);
@@ -119,19 +132,24 @@ export async function scanFixtures(opts: ScanOpts) {
         //   so your UI still shows a bookmaker + picks like before.
         if (hasOddsTop(pred)) {
           const originalTop = pred.top;
+        
           const topFiltered = originalTop.filter((b: any) =>
             passesFilters(b, { onlyValue, minOdds, market })
           );
-
+        
+          const topFinal = (topFiltered.length ? topFiltered : originalTop).map((b: any) => ({
+            ...b,
+            severity: severityFromBet(b),
+          }));
+        
           results.push({
             fixtureId,
             prediction: {
               ...pred,
-              top: topFiltered.length ? topFiltered : originalTop,
+              top: topFinal,
             },
           });
         } else {
-          // model-only or no-bookmaker response — push as-is
           results.push({ fixtureId, prediction: pred });
         }
       } catch (e: any) {
