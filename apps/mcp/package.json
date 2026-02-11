@@ -1,0 +1,20 @@
+{
+  "name": "mcp",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx src/index.ts",
+    "test:client": "tsx src/test-client.ts"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "@predictor/core": "workspace:^",
+    "dotenv": "^16.4.5",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/node": "25.2.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.0.0"
+  }
+}

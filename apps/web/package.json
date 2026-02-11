@@ -1,0 +1,21 @@
+{
+	"name": "web",
+	"private": true,
+	"scripts": {
+		"dev": "next dev",
+		"build": "next build",
+		"start": "next start",
+		"lint": "next lint"
+	},
+	"dependencies": {
+		"@predictor/core": "workspace:^",
+		"next": "^16.1.6",
+		"react": "^19.2.4",
+		"react-dom": "^19.2.4",
+		"zod": "^4.3.6"
+	},
+	"devDependencies": {
+		"@types/node": "25.2.0",
+		"@types/react": "19.2.10"
+	}
+}

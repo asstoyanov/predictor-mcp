@@ -1,0 +1,20 @@
+{
+  "name": "predictor-mcp",
+  "private": true,
+  "packageManager": "pnpm@9.0.0",
+  "scripts": {
+    "dev": "concurrently -k -n WEB,MCP -c blue,green \"pnpm dev:web\" \"pnpm dev:mcp\"",
+    "dev:web": "pnpm --filter web dev",
+    "dev:mcp": "pnpm -C apps/mcp dev",
+    "build": "pnpm -r build",
+    "lint": "pnpm -r lint",
+    "test:mcp": "pnpm -C apps/mcp test:client"
+  },
+  "dependencies": {
+    "@predictor/core": "workspace:^"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1",
+    "tsx": "^4.21.0"
+  }
+}
