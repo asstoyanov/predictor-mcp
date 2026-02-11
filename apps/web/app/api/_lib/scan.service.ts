@@ -75,7 +75,7 @@ function severityFromBet(bet: any) {
   const odds = Number(bet?.odds);
 
   // huge disagreement: big edge AND not a short price
-  if (Number.isFinite(edge) && edge >= 0.1 && Number.isFinite(odds) && odds >= 3) {
+  if (Number.isFinite(edge) && edge >= 0.100 && Number.isFinite(odds) && odds >= 2) {
     return "huge";
   }
 

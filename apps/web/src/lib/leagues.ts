@@ -11,8 +11,10 @@ export type LeagueKey =
   | "bundesliga2"
   | "ligue1"
   | "ligue2"
-  | "libertadores"
-  | "sudamericana"
+  | "eredivisie"
+  | "pt_primera"
+  | "be_pro_league"
+  | "gr_super_league"
   | "br_serie_a"
   | "ar_primera"
   | "cl_primera"
@@ -44,8 +46,10 @@ export const LEAGUES: Record<LeagueKey, { id: number; label: string }> = {
   ligue1: { id: 61, label: "France — Ligue 1" },
   ligue2: { id: 62, label: "France — Ligue 2" },
 
-  libertadores: { id: 13, label: "South America — Libertadores" },
-  sudamericana: { id: 11, label: "South America — Sudamericana" },
+  eredivisie: { id: 88, label: "Netherlands — Eredivisie" },
+  pt_primera: { id: 94, label: "Portugal — Primeira Liga" },
+  be_pro_league: { id: 144, label: "Belgium — Pro League" },
+  gr_super_league: { id: 197, label: "Greece — Super League 1" },
 
   br_serie_a: { id: 71, label: "Brazil — Serie A" },
   ar_primera: { id: 128, label: "Argentina — Primera Division" },

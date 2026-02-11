@@ -197,6 +197,53 @@ export default function Page() {
       setArbLoading(false);
     }
   }
+
+  function renderBestBadge(edgeData: any) {
+    const best = edgeData?.top?.[0];
+    if (!best) return null;
+  
+
+
+    const isHuge = best.edge > 0.09 && best.modelProb > 0.33;
+  
+    const bg = isHuge
+      ? "#ffe0f0"
+      : best.value
+      ? "#e8f5e9"
+      : "#f5f5f5";
+  
+    const border = isHuge
+      ? "#ff7ac3"
+      : best.value
+      ? "#b7e1be"
+      : "#e0e0e0";
+  
+    const color = isHuge
+      ? "#7a114a"
+      : best.value
+      ? "#145214"
+      : "#333";
+  
+    return (
+      <span
+        style={{
+          marginLeft: 10,
+          fontSize: 12,
+          fontWeight: 900,
+          padding: "3px 9px",
+          borderRadius: 999,
+          border: `1px solid ${border}`,
+          background: bg,
+          color,
+        }}
+        title={`${best.market} ${best.selection} @${best.odds} edge ${best.edge}`}
+      >
+        {String(best.market).toUpperCase()} {String(best.selection).toUpperCase()} · edge is {best.edge}
+        {isHuge ? " 🟣" : best.value ? " ✅" : ""}
+      </span>
+    );
+  }
+  
   
 
   return (
@@ -356,6 +403,7 @@ export default function Page() {
 
         {/* RIGHT */}
         <div style={{ border: "1px solid #e5e5e5", borderRadius: 12, padding: 12 }}>
+          <div style={{ display: "flex", justifyContent: "flex-end" }}>{renderBestBadge(edgeData)}</div>
           <div style={{ marginTop: 12, marginBottom: 12, borderTop: "1px solid #eee", paddingTop: 12 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
               <div style={{ fontWeight: 800 }}>Arbitrage</div>
@@ -408,7 +456,7 @@ export default function Page() {
             <div style={{ display: "grid", gap: 10 }}>
               <ul style={{ opacity: 0.8, fontSize: 12, display: "flex", flexDirection: "column", gap: 10, paddingInlineStart: 20 }}>
                 <li>
-                  Book: <b>{edgeData.bookmaker?.name ?? "?"}</b>
+                  Bookie: <b>{edgeData.bookmaker?.name ?? "?"}</b>
                 </li>
                 <li>
                   Elo: <b>{edgeData.modelInfo?.homeElo}</b> vs <b>{edgeData.modelInfo?.awayElo}</b>

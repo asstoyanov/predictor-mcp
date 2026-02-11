@@ -143,16 +143,6 @@ const injuriesBlock = {
   },
 };
 
-if (process.env.NODE_ENV !== "production") {
-  console.log("[injuries]", fixtureId, {
-    available: injuriesBlock.available,
-    homeOut: injuriesBlock.home.outCount,
-    awayOut: injuriesBlock.away.outCount,
-    homeFlags: injuriesBlock.home.flags.map((f: any) => f.code),
-    awayFlags: injuriesBlock.away.flags.map((f: any) => f.code),
-  });
-}
-
 
   // Base response always includes model markets
   const base = {

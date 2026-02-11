@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { findArbitrageForFixture } from "../../_lib/arbitrage.service";
+import { findArbitrageForFixture } from "../_lib/arbitrage.service";
 
 const Q = z.object({
   fixtureId: z.coerce.number().int().positive(),
