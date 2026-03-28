@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { LEAGUES, type LeagueKey } from "../src/lib/leagues";
 
 type Fixture = {
@@ -40,6 +41,36 @@ function statusBadge(status?: string) {
   return { text: s || "?", bg: "#f5f5f5", border: "#e0e0e0" };
 }
 
+/** Shape of the predict/edge API response so autocomplete works for edgeData */
+type EdgePick = {
+  market: string;
+  selection: string;
+  odds: number;
+  modelProb: number;
+  impliedProb: number;
+  edge: number;
+  value?: boolean;
+  score?: number;
+};
+
+type EdgeData = {
+  fixtureId: number;
+  homeTeam: string;
+  awayTeam: string;
+  injuries?: {
+    home?: { teamName: string; outCount: number; flags?: Array<{ code: string; playerName?: string }>; outPlayers?: Array<{ playerId: number; name: string }> };
+    away?: { teamName: string; outCount: number; flags?: Array<{ code: string; playerName?: string }>; outPlayers?: Array<{ playerId: number; name: string }> };
+  };
+  modelInfo?: {
+    homeElo: number;
+    awayElo: number;
+    lambdaHome: number;
+    lambdaAway: number;
+  };
+  bookmaker?: { id?: number; name?: string } | null;
+  top: EdgePick[];
+};
+
 const quickBtnStyle: React.CSSProperties = {
   padding: "8px 10px",
   borderRadius: 8,
@@ -62,14 +93,14 @@ export default function Page() {
     return m < 7 ? y - 1 : y;
   });
 
-  const [minEdge, setMinEdge] = useState<number>(0.05);
+  const [minEdge, setMinEdge] = useState<number>(0.07);
 
   const [fixtures, setFixtures] = useState<Fixture[]>([]);
   const [loadingFx, setLoadingFx] = useState(false);
   const [fxError, setFxError] = useState<string | null>(null);
 
   const [selected, setSelected] = useState<number | null>(null);
-  const [edgeData, setEdgeData] = useState<any>(null);
+  const [edgeData, setEdgeData] = useState<EdgeData | null>(null);
   const [loadingEdge, setLoadingEdge] = useState(false);
   const [edgeError, setEdgeError] = useState<string | null>(null);
 
@@ -80,6 +111,35 @@ export default function Page() {
 
   // Local in-page cache so clicking the same fixture doesn’t refetch
   const [predCache, setPredCache] = useState<Record<number, any>>({});
+
+  const [aiText, setAiText] = useState<string>("");
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState<string>("");
+
+  async function handleAiAnalyze(fixtureId: number) {
+    setAiLoading(true);
+    setAiError("");
+    try {
+      const res = await fetch("/api/agent", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          mode: "explain",
+          message: `Analyze fixtureId ${fixtureId} with minEdge 0.07. Return top 1 pick or NO BET.`,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error ?? "Agent error");
+
+      setAiText(data?.text ?? "");
+    } catch (e: any) {
+      setAiError(e?.message ?? "Agent error");
+    } finally {
+      setAiLoading(false);
+    }
+  }
+
 
   function setToday() {
     const d = new Date();
@@ -134,6 +194,8 @@ export default function Page() {
 
   async function loadEdge(fixtureId: number) {
     setSelected(fixtureId);
+    setAiText("");
+    setAiError("");
     setLoadingEdge(true);
     setEdgeData(null);
     setEdgeError(null);
@@ -403,6 +465,99 @@ export default function Page() {
 
         {/* RIGHT */}
         <div style={{ border: "1px solid #e5e5e5", borderRadius: 12, padding: 12 }}>
+        <button
+          onClick={() => selected && handleAiAnalyze(selected)}
+          disabled={!selected || aiLoading}
+          style={{
+            padding: "9px 12px",
+            borderRadius: 10,
+            border: "1px solid #ddd",
+            background: !selected || aiLoading ? "#f3f3f3" : "white",
+            cursor: !selected || aiLoading ? "not-allowed" : "pointer",
+            fontWeight: 800,
+          }}
+        >
+          {aiLoading ? "Analyzing…" : "AI Analyze"}
+        </button>
+
+        {(aiText || aiError) &&
+          typeof document !== "undefined" &&
+          createPortal(
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="ai-modal-title"
+              style={{
+                position: "fixed",
+                inset: 0,
+                zIndex: 9999,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                background: "rgba(0,0,0,0.5)",
+                padding: 24,
+              }}
+              onClick={(e) => e.target === e.currentTarget && (setAiText(""), setAiError(""))}
+            >
+              <div
+                style={{
+                  background: "white",
+                  borderRadius: 12,
+                  border: "1px solid #e5e5e5",
+                  maxWidth: 640,
+                  width: "100%",
+                  maxHeight: "80vh",
+                  overflow: "hidden",
+                  display: "flex",
+                  flexDirection: "column",
+                  boxShadow: "0 20px 40px rgba(0,0,0,0.15)",
+                }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 16px", borderBottom: "1px solid #eee" }}>
+                  <span id="ai-modal-title" style={{ fontWeight: 800 }}>AI Analysis</span>
+                  <button
+                    type="button"
+                    onClick={() => { setAiText(""); setAiError(""); }}
+                    style={{
+                      padding: "6px 12px",
+                      borderRadius: 8,
+                      border: "1px solid #ddd",
+                      background: "white",
+                      cursor: "pointer",
+                      fontWeight: 700,
+                      fontSize: 14,
+                    }}
+                  >
+                    Close
+                  </button>
+                </div>
+                <div style={{ overflowX: "hidden", overflowY: "auto", padding: 16, flex: 1 }}>
+                  {aiError ? (
+                    <div style={{ marginBottom: 12, fontSize: 14, color: "#b91c1c" }}>{aiError}</div>
+                  ) : null}
+                  {aiText ? (
+                    <div
+                    style={{
+                      marginTop: 12,
+                      padding: 16,
+                      borderRadius: 12,
+                      border: "1px solid #e5e5e5",
+                      background: "#fafafa",
+                      fontSize: 14,
+                      lineHeight: 1.6,
+                      whiteSpace: "pre-wrap",
+                    }}
+                  >
+                    {aiText}
+                  </div>
+                  ) : null}
+                </div>
+              </div>
+            </div>,
+            document.body
+          )}
+
           <div style={{ display: "flex", justifyContent: "flex-end" }}>{renderBestBadge(edgeData)}</div>
           <div style={{ marginTop: 12, marginBottom: 12, borderTop: "1px solid #eee", paddingTop: 12 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
@@ -483,7 +638,7 @@ export default function Page() {
 
                         {t.flags?.length ? (
                           <div style={{ marginTop: 4, fontSize: 12 }}>
-                            {t.flags.map((f: any, i: number) => (
+                            {t.flags.map((f, i) => (
                               <div key={i} style={{ marginTop: 2 }}>
                                 ✅ <b>{f.code}</b> {f.playerName ? `— ${f.playerName}` : ""}
                               </div>
@@ -495,7 +650,7 @@ export default function Page() {
 
                         {t.outPlayers?.length ? (
                           <div style={{ marginTop: 6, fontSize: 12, opacity: 0.9 }}>
-                            {t.outPlayers.slice(0, 8).map((p: any) => (
+                            {t.outPlayers.slice(0, 8).map((p) => (
                               <div key={p.playerId}>• {p.name}</div>
                             ))}
                             {t.outPlayers.length > 8 ? <div style={{ opacity: 0.7 }}>…and {t.outPlayers.length - 8} more</div> : null}
@@ -509,7 +664,7 @@ export default function Page() {
                 </div>
               ) : null}
 
-              {edgeData.top.map((p: any, i: number) => (
+              {edgeData.top.map((p, i) => (
                 <div key={i} style={{ border: "1px solid #e5e5e5", borderRadius: 12, padding: 10 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
                     <div style={{ fontWeight: 900 }}>

@@ -1,4 +1,5 @@
 export type LeagueKey =
+  |"cl"
   | "laliga"
   | "laliga2"
   | "epl"
@@ -14,6 +15,7 @@ export type LeagueKey =
   | "eredivisie"
   | "pt_primera"
   | "be_pro_league"
+  | "dk_superligaen"
   | "gr_super_league"
   | "br_serie_a"
   | "ar_primera"
@@ -27,6 +29,7 @@ export type LeagueKey =
   | "ve_primera";
 
 export const LEAGUES: Record<LeagueKey, { id: number; label: string }> = {
+  cl: { id: 2, label: "Europe - Champions League" },
   laliga: { id: 140, label: "Spain — La Liga" },
   laliga2:{ id: 141, label: "Spain — La Liga 2" },
   epl: { id: 39, label: "England — Premier League" },
@@ -50,6 +53,8 @@ export const LEAGUES: Record<LeagueKey, { id: number; label: string }> = {
   pt_primera: { id: 94, label: "Portugal — Primeira Liga" },
   be_pro_league: { id: 144, label: "Belgium — Pro League" },
   gr_super_league: { id: 197, label: "Greece — Super League 1" },
+  dk_superligaen: { id: 119, label: "Denmark — Superligaen" },
+
 
   br_serie_a: { id: 71, label: "Brazil — Serie A" },
   ar_primera: { id: 128, label: "Argentina — Primera Division" },
